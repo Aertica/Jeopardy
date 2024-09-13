@@ -1,6 +1,6 @@
 @Jeopardy.Server_HostAddress = http://localhost:5055
 
-GET {{Jeopardy.Server_HostAddress}}/weatherforecast/
+GET {{Jeopardy.Server_HostAddress}}/gameboard/
 Accept: application/json
 
 ###

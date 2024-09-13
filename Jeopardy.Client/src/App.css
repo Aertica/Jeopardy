@@ -1,11 +1,16 @@
 ﻿#root {
-    max-width: 1280px;
     margin: 0 auto;
     padding: 2rem;
     text-align: center;
 }
 
 th, td {
+    width: 14vw;
+    height: 14vh;
     padding-left: 1rem;
     padding-right: 1rem;
+    margin: 1rem;
+    background-color: black;
+    border-radius: 10%;
+    font-size: xx-large;
 }
