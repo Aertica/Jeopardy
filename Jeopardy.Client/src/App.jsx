@@ -2,47 +2,52 @@ import { useEffect, useState } from 'react';
 import './App.css';
 
 function App() {
-    const [forecasts, setForecasts] = useState();
+    const QUESTIONS_PER_CATEGORY = 5;
+    const [gameboard, setGameboard] = useState();
 
     useEffect(() => {
-        populateWeatherData();
+        populateGameboard();
     }, []);
 
-    const contents = forecasts === undefined
-        ? <p><em>Loading... Please refresh once the ASP.NET backend has started. See <a href="https://aka.ms/jspsintegrationreact">https://aka.ms/jspsintegrationreact</a> for more details.</em></p>
-        : <table className="table table-striped" aria-labelledby="tableLabel">
+    let keys = !gameboard ? undefined : Object.keys(gameboard);
+    let table = !gameboard ? undefined :
+        <table>
             <thead>
                 <tr>
-                    <th>Date</th>
-                    <th>Temp. (C)</th>
-                    <th>Temp. (F)</th>
-                    <th>Summary</th>
+                    {keys.map(key =>
+                        <th key={key}>{key}</th>
+                    )}
                 </tr>
             </thead>
             <tbody>
-                {forecasts.map(forecast =>
-                    <tr key={forecast.date}>
-                        <td>{forecast.date}</td>
-                        <td>{forecast.temperatureC}</td>
-                        <td>{forecast.temperatureF}</td>
-                        <td>{forecast.summary}</td>
+                {[...Array(QUESTIONS_PER_CATEGORY).keys()].map(y =>
+                    <tr key={y}>
+                        {[...Array(keys.length).keys()].map(x =>
+                            <td key={x} id={`${x}-${y}`} onClick={flip.bind(this, gameboard[keys[x]][y])}>{gameboard[keys[x]][y].points}</td>
+                        )}
                     </tr>
                 )}
             </tbody>
         </table>;
-
+        
     return (
         <div>
-            <h1 id="tableLabel">Weather forecast</h1>
-            <p>This component demonstrates fetching data from the server.</p>
-            {contents}
+            {table}
         </div>
     );
-    
-    async function populateWeatherData() {
-        const response = await fetch('weatherforecast');
+
+    function flip(card, e) {
+        card.state++;
+        if (card.state == 1)
+            e.target.innerText = card.question.question;
+        else
+            e.target.innerText = card.question.answer;
+    }
+
+    async function populateGameboard() {
+        const response = await fetch('gameboard/create');
         const data = await response.json();
-        setForecasts(data);
+        setGameboard(data);
     }
 }
 
