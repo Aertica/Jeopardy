@@ -19,9 +19,9 @@ namespace Jeopardy.Test
         }
 
         [OneTimeTearDown]
-        public void OneTimeTearDown()
+        public async Task OneTimeTearDown()
         {
-            Bot.Client.LogoutAsync();
+            await Bot.Client.LogoutAsync();
         }
 
         [Test]
