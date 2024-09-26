@@ -7,7 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jeopardy.Server", "Jeopardy
 EndProject
 Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "Jeopardy.Client", "Jeopardy.Client\Jeopardy.Client.esproj", "{7F8F8970-1178-4290-888E-490FB17C8ED6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jeopardy.Test", "Jeopardy.Test\Jeopardy.Test.csproj", "{70C0B1F3-8B04-46E6-9B61-45537F3DAE3D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jeopardy.Test", "Jeopardy.Test\Jeopardy.Test.csproj", "{70C0B1F3-8B04-46E6-9B61-45537F3DAE3D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jeopardy.Discord", "Jeopardy.Discord\Jeopardy.Discord.csproj", "{EEF09A1F-0305-48AD-AE76-73F625F86D2E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,6 +31,10 @@ Global
 		{70C0B1F3-8B04-46E6-9B61-45537F3DAE3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{70C0B1F3-8B04-46E6-9B61-45537F3DAE3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{70C0B1F3-8B04-46E6-9B61-45537F3DAE3D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EEF09A1F-0305-48AD-AE76-73F625F86D2E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EEF09A1F-0305-48AD-AE76-73F625F86D2E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EEF09A1F-0305-48AD-AE76-73F625F86D2E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EEF09A1F-0305-48AD-AE76-73F625F86D2E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

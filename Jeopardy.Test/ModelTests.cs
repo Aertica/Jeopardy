@@ -2,12 +2,17 @@ using Jeopardy.Server.Models;
 
 namespace Jeopardy.Test
 {
+    [TestFixture]
     public class ModelTests
     {
+        private const int NUM_CATEGORIES = 6;
+        private const int NUM_QUESTIONS_PER_CATEGORY = 5;
+
         [Test]
-        public void QuestionCard()
+        public void TestQuestionCard()
         {
-            var card = new QuestionCard(new MockQuestion(), 100);
+            var question = new MockQuestion();
+            var card = new QuestionCard(question, 100);
 
             Assert.Multiple(() =>
             {
@@ -25,11 +30,19 @@ namespace Jeopardy.Test
         }
 
         [Test]
-        public void GameBoard()
+        public void TestGameBoard()
         {
             var gameboard = new GameBoard();
 
-            Assert.That(gameboard.Game, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(gameboard.Game, Is.Not.Null);
+                Assert.That(gameboard.Game, Has.Count.EqualTo(NUM_CATEGORIES));
+                foreach (var category in gameboard.Game)
+                {
+                    Assert.That(category.Value.Count(), Is.EqualTo(NUM_QUESTIONS_PER_CATEGORY));
+                }
+            });
         }
     }
 }

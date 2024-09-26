@@ -1,5 +1,4 @@
 ﻿using Jeopardy.Server.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Jeopardy.Server.Controllers
