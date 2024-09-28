@@ -44,7 +44,6 @@ namespace Jeopardy.Discord.OAuth
         {
             using var client = await GetRestClient();
             var accessTokens = new Dictionary<ulong, Dictionary<string, string>>();
-
             try
             {
                 using var reader = new JsonTextReader(File.OpenText(AccessTokenPath));

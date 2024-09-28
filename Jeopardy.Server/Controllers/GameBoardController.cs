@@ -1,4 +1,5 @@
-﻿using Jeopardy.Server.Models;
+﻿using Jeopardy.Discord;
+using Jeopardy.Server.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Jeopardy.Server.Controllers
@@ -7,12 +8,11 @@ namespace Jeopardy.Server.Controllers
     [Route("[controller]/[action]")]
     public class GameBoardController : ControllerBase
     {
-        // GET: gameboard/create
-        [HttpGet]
-        public Dictionary<string, IEnumerable<QuestionCard>> Create()
+        // GET: gameboard/create/5
+        [HttpGet("{id}")]
+        public GameBoard Create(Guid id)
         {
-            var model = new GameBoard();
-            return model.Game;
+            return new GameBoard(id);
         }
     }
 }

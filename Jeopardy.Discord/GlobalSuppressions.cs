@@ -6,4 +6,5 @@
 using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "Name matches discord slash command.", Scope = "member", Target = "~M:Jeopardy.Discord.DiscordBot.authorize~System.String")]
-[assembly: SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "Name matches discord slash command.", Scope = "member", Target = "~M:Jeopardy.Discord.DiscordBot.play(Discord.WebSocket.SocketSlashCommand)~System.String")]
+[assembly: SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "Name matches discord slash command.", Scope = "member", Target = "~M:Jeopardy.Discord.DiscordBot.play(Discord.WebSocket.SocketSlashCommand)~System.Threading.Tasks.Task{System.String}")]
+[assembly: SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "Name matches discord slash command.", Scope = "member", Target = "~M:Jeopardy.Discord.DiscordBot.invite~System.String")]

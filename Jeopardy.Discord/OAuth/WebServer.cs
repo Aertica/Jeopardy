@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Jeopardy.Discord.OAuth
 {
-    public class WebServer
+    public class WebServer : IDisposable
     {
         private const string CLIENT_ID = "CLIENT_ID";
         private const string CLIENT_SECRET = "CLIENT_SECRET";
@@ -20,19 +20,21 @@ namespace Jeopardy.Discord.OAuth
         {
             Client = new();
             Listener = new();
-            Task.Run(Start);
         }
 
-        private async void Start()
+        public void Start()
         {
-            Listener.Prefixes.Add(REDIRECT_URI + "/");
-            Listener.Start();
-            // wait for a user to authenticate
-            while (true)
+            Task.Run(async () =>
             {
-                var context = await Listener.GetContextAsync();
-                await HandleRequest(context.Request, context.Response);
-            }
+                Listener.Prefixes.Add(REDIRECT_URI + "/");
+                Listener.Start();
+                // wait for a user to authenticate
+                while (true)
+                {
+                    var context = await Listener.GetContextAsync();
+                    await HandleRequest(context.Request, context.Response);
+                }
+            });
         }
 
         private async Task HandleRequest(HttpListenerRequest request, HttpListenerResponse response)
@@ -79,6 +81,13 @@ namespace Jeopardy.Discord.OAuth
             });
 
             return await Client.PostAsync(USER_ACCESS_TOKEN_ENDPOINT, content);
+        }
+
+        public void Dispose()
+        {
+            Client.Dispose();
+            Listener.Stop();
+            Listener.Close();
         }
     }
 }

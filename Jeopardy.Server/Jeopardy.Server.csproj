@@ -13,6 +13,7 @@
     <PackageReference Include="Microsoft.AspNetCore.SpaProxy">
       <Version>8.*-*</Version>
     </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.5" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
   </ItemGroup>
 
@@ -21,6 +22,7 @@
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\Jeopardy.Discord\Jeopardy.Discord.csproj" />
+    <ProjectReference Include="..\Jeopardy.Util\Jeopardy.Util.csproj" />
   </ItemGroup>
 
 </Project>

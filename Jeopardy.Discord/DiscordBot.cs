@@ -18,7 +18,6 @@ namespace Jeopardy.Discord
         {
             Client = new(new() { GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildMembers });
             Ready = new();
-            _ = new WebServer();
         }
 
         public void StartClient()
@@ -45,6 +44,11 @@ namespace Jeopardy.Discord
                 authCommand.WithDescription("Authorize Jeopardy Bot to use your Discord information.");
                 commands.Add(authCommand.Build());
 
+                var inviteCommand = new SlashCommandBuilder();
+                inviteCommand.WithName(nameof(invite));
+                inviteCommand.WithDescription("Invite Jeopardy Bot to another server.");
+                commands.Add(inviteCommand.Build());
+
                 var playCommand = new SlashCommandBuilder();
                 playCommand.WithName(nameof(play));
                 playCommand.WithDescription("Start a game of Jeopardy using this server.");
@@ -56,6 +60,11 @@ namespace Jeopardy.Discord
 
                 await Task.Delay(-1);
             });
+        }
+
+        public SocketTextChannel? GetQuotesChannel(ulong guildID)
+        {
+            return Client.GetGuild(guildID)?.Channels.Where(channel => channel.Name == QUOTES_CHANNEL).SingleOrDefault() as SocketTextChannel;
         }
     }
 }

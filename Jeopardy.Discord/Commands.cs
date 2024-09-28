@@ -7,6 +7,9 @@ namespace Jeopardy.Discord
         private const string USER_AUTH_URI = "https://discord.com/oauth2/authorize?client_id=1108572849284853781&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fapi%2Foauth%2Fdiscord%2Fredirect&scope=identify+connections";
         private const string SERVER_AUTH_URI = "https://discord.com/oauth2/authorize?client_id=1108572849284853781&permissions=328565255168&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fapi%2Foauth%2Fdiscord%2Fredirect&integration_type=0&scope=identify+bot+connections";
 
+        public delegate Task<Guid> OnPlayEventHandler(DiscordBot bot, ulong guildID);
+        public event OnPlayEventHandler OnPlay;
+
         public async Task SlashCommandHandler(SocketSlashCommand command)
         {
             await command.DeferAsync();
@@ -15,7 +18,8 @@ namespace Jeopardy.Discord
                 string result = command.CommandName switch
                 {
                     nameof(authorize) => authorize(),
-                    nameof(play) => play(command),
+                    nameof(invite) => invite(),
+                    nameof(play) => await play(command),
                     _ => throw new ArgumentException($"Command \"{command.CommandName}\" is not supported.", nameof(command)),
                 };
                 await command.FollowupAsync(result);
@@ -28,13 +32,23 @@ namespace Jeopardy.Discord
 
         private static string authorize()
         {
-            return $"[Authorize]({USER_AUTH_URI}) Jeopardy Bot.";
-                 //$"[Authorize]({SERVER_AUTH_URI}) Jeopardy Bot.";
+            return $"[Authorize]({USER_AUTH_URI}) Jeopardy Bot to use your Discord information.";
         }
 
-        private string play(SocketSlashCommand command)
+        private static string invite()
         {
-            throw new NotImplementedException();
+            return $"[Invite]({SERVER_AUTH_URI}) Jeopardy Bot to another server.";
+        }
+
+        private async Task<string> play(SocketSlashCommand command)
+        {
+            if (command.GuildId is ulong guildID)
+            {
+                var id = await OnPlay.Invoke(this, guildID);
+                return $"https://localhost:5173/{id}";
+            }
+                
+            throw new InvalidOperationException($"Command \"{command.CommandName}\" must be invoked from a server.");
         }
     }
 }
