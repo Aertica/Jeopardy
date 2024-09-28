@@ -23,7 +23,7 @@ function App() {
                 {[...Array(QUESTIONS_PER_CATEGORY).keys()].map(y =>
                     <tr key={y}>
                         {[...Array(keys.length).keys()].map(x =>
-                            <td key={x} id={`${x}-${y}`} onClick={flip.bind(this, gameboard[keys[x]][y])}>{gameboard[keys[x]][y].points}</td>
+                            <td key={x} id={`${x}-${y}`} onClick={flip.bind(this, gameboard[keys[x]][y])}>{(y + 1) * 100}</td>
                         )}
                     </tr>
                 )}
@@ -37,15 +37,17 @@ function App() {
     );
 
     function flip(card, e) {
+        if (card.state === undefined) card.state = 0
         card.state++;
         if (card.state == 1)
-            e.target.innerText = card.question.question;
+            e.target.innerText = card.question;
         else
-            e.target.innerText = card.question.answer;
+            e.target.innerText = card.answer;
     }
 
     async function populateGameboard() {
-        const response = await fetch('gameboard/create');
+        let a = window.location.href.slice(location.href.lastIndexOf("/"), location.href.length);
+        const response = await fetch('gameboard/create' + a);
         const data = await response.json();
         setGameboard(data);
     }

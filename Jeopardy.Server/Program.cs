@@ -1,5 +1,8 @@
 
 using Jeopardy.Discord;
+using Jeopardy.Discord.OAuth;
+using Jeopardy.Server.Controllers;
+using Jeopardy.Server.Models;
 
 namespace Jeopardy.Server
 {
@@ -11,6 +14,15 @@ namespace Jeopardy.Server
 
             var bot = new DiscordBot();
             bot.StartClient();
+            bot.OnPlay += async (DiscordBot _bot, ulong guildID) =>
+            {
+                GameBoard game = [];
+                await game.Reset(bot, guildID);
+                return game.ID;
+            };
+
+            using var server = new WebServer();
+            server.Start();
 
             #endregion
             
