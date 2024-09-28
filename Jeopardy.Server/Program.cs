@@ -14,7 +14,7 @@ namespace Jeopardy.Server
 
             var bot = new DiscordBot();
             bot.StartClient();
-            bot.OnPlay += async (DiscordBot _bot, ulong guildID) =>
+            bot.OnPlay += async (ulong guildID) =>
             {
                 GameBoard game = [];
                 await game.Reset(bot, guildID);
