@@ -1,4 +1,5 @@
-﻿using Jeopardy.Server.Models;
+﻿using Jeopardy.Bots;
+using Jeopardy.Server.Models;
 
 namespace Jeopardy.Test.Server
 {

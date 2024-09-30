@@ -1,5 +1,4 @@
-﻿using Jeopardy.Discord;
-using Jeopardy.Server.Models;
+﻿using Jeopardy.Server.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Jeopardy.Server.Controllers

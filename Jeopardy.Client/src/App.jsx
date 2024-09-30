@@ -40,9 +40,9 @@ function App() {
         if (card.state === undefined) card.state = 0
         card.state++;
         if (card.state == 1)
-            e.target.innerText = card.question;
+            e.target.innerHTML = card.question;
         else
-            e.target.innerText = card.answer;
+            e.target.innerHTML = card.answer;
     }
 
     async function populateGameboard() {

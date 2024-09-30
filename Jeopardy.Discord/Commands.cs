@@ -1,6 +1,6 @@
 ﻿using Discord.WebSocket;
 
-namespace Jeopardy.Discord
+namespace Jeopardy.Bots
 {
     public partial class DiscordBot
     {
@@ -44,7 +44,7 @@ namespace Jeopardy.Discord
         {
             if (command.GuildId is ulong guildID)
             {
-                var id = await OnPlay.Invoke(guildID);
+                var id = await OnPlay(guildID);
                 return $"https://localhost:5173/{id}";
             }
                 

@@ -1,32 +1,21 @@
 
-using Jeopardy.Discord;
-using Jeopardy.Discord.OAuth;
-using Jeopardy.Server.Controllers;
-using Jeopardy.Server.Models;
+using EmbedIO;
+using Jeopardy.Bots;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using NuGet.Packaging;
+using static System.Net.WebRequestMethods;
 
 namespace Jeopardy.Server
 {
     public class Program
     {
+        private const string DISCORD_CLIENT_ID = "DISCORD_CLIENT_ID";
+        private const string DISCORD_CLIENT_SECRET = "DISCORD_CLIENT_SECRET";
+        private static readonly IConfigurationRoot _config = new ConfigurationBuilder().AddUserSecrets<Program>().Build();
+
         public static void Main(string[] args)
         {
-            #region Start the Discord Bot
-
-            var bot = new DiscordBot();
-            bot.StartClient();
-            bot.OnPlay += async (ulong guildID) =>
-            {
-                GameBoard game = [];
-                await game.Reset(bot, guildID);
-                return game.ID;
-            };
-
-            using var server = new WebServer();
-            server.Start();
-
-            #endregion
-            
-            #region Start the Web App
+            var bots = IBot.InitializeBots();
 
             var builder = WebApplication.CreateBuilder(args);
             builder.Services.AddControllers();
@@ -40,8 +29,6 @@ namespace Jeopardy.Server
             app.MapControllers();
             app.MapFallbackToFile("/index.html");
             app.Run();
-
-            #endregion
         }
     }
 }

@@ -1,14 +1,7 @@
-﻿using Jeopardy.Discord;
-using Jeopardy.Discord.OAuth;
-using NUnit.Framework.Interfaces;
-using NUnit.Framework.Internal.Builders;
-using NUnit.Framework.Internal;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Jeopardy.Bots;
+using Jeopardy.Bots.OAuth;
 using Newtonsoft.Json;
+using NUnit.Framework.Internal;
 
 namespace Jeopardy.Test
 {
@@ -17,24 +10,20 @@ namespace Jeopardy.Test
     {
         protected const ulong TEST_GUILD_ID = 974785648298979481; // Bimbo Inc.
 
-        protected static DiscordBot Bot { get; } = new();
-        protected static WebServer Server { get; } = new();
+        protected static IEnumerable<IBot> Bots { get; set; }
 
         [OneTimeSetUp]
         public async Task OneTimeSetUp()
         {
-            using var writer = new JsonTextWriter(File.CreateText($"{Environment.CurrentDirectory}\\ActiveGames.json"));
-
-            Bot.StartClient();
-            Server.Start();
-            await Bot.Ready.Task;
+            Bots = IBot.InitializeBots();
+            foreach (var bot in Bots)
+                await bot.Ready.Task;
         }
 
         [OneTimeTearDown]
         public async Task OneTimeTearDown()
         {
-            await Bot.Client.LogoutAsync();
-            Server.Dispose();
+            
         }
     }
 }
