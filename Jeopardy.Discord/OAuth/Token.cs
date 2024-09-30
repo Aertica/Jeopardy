@@ -1,19 +1,22 @@
 ﻿using Discord;
 using Discord.Rest;
+using Jeopardy.Util.Json;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using SpotifyAPI.Web;
+using System.Collections.Generic;
 
-namespace Jeopardy.Discord.OAuth
+namespace Jeopardy.Bots.OAuth
 {
-    public class Token
+    public class Token() : IToken
     {
-        private static string AccessTokenPath => $"{Environment.CurrentDirectory}\\AccessTokens.json";
+        private static string Path => $"{Environment.CurrentDirectory}\\AccessTokens.json";
 
-        public string AccessToken { get; }
-        public string RefreshToken { get; }
-        public DateTime Expiration { get; }
+        public string? AccessToken { get; private set; }
+        public string? RefreshToken { get; private set; }
+        public DateTime? Expiration { get; private set; }
 
-        public Token(string json)
+        public Token(string json) : this()
         {
             var token = JObject.Parse(json);
             var accessToken = token.GetValue(nameof(AccessToken))?.ToString()
@@ -28,40 +31,48 @@ namespace Jeopardy.Discord.OAuth
             Expiration = DateTime.Now.AddSeconds(int.Parse(expiresIn));
         }
 
-        public Token(ulong userID)
+        public Token(ulong userID) : this()
         {
-            using var reader = new JsonTextReader(File.OpenText(AccessTokenPath));
-            var tokens = JToken.ReadFrom(reader)?.ToObject<Dictionary<ulong, Dictionary<string, string>>>()
-                ?? throw new JsonReaderException($"Error reading token store at {AccessTokenPath}.");
+            using var reader = new JsonTextReader(File.OpenText(Path));
+            var serializer = new JsonSerializer()
+            {
+                Converters = { new InterfaceConverter<IToken, Token>() },
+                Formatting = Formatting.Indented
+            };
+            var tokens = serializer.Deserialize<Dictionary<ulong, IToken>>(reader)
+                ?? throw new JsonReaderException($"Error reading token store at {Path}.");
             var token = tokens[userID];
 
-            AccessToken = token[nameof(AccessToken)];
-            RefreshToken = token[nameof(RefreshToken)];
-            Expiration = DateTime.Parse(token[nameof(Expiration)]);
+            AccessToken = token.AccessToken;
+            RefreshToken = token.RefreshToken;
+            Expiration = token.Expiration;
         }
 
         public async Task Save()
         {
-            using var client = await GetRestClient();
-            var accessTokens = new Dictionary<ulong, Dictionary<string, string>>();
+            using var client = await GetClient();
+            var accessTokens = new Dictionary<ulong, IToken>();
             try
             {
-                using var reader = new JsonTextReader(File.OpenText(AccessTokenPath));
-                accessTokens = JToken.ReadFrom(reader)?.ToObject<Dictionary<ulong, Dictionary<string, string>>>()
-                    ?? throw new JsonReaderException($"Error reading token store at {AccessTokenPath}.");
+                using var reader = new JsonTextReader(File.OpenText(Path));
+                var serializer = new JsonSerializer()
+                {
+                    Converters = { new InterfaceConverter<IToken, Token>() },
+                    Formatting = Formatting.Indented
+                };
+                accessTokens = serializer.Deserialize<Dictionary<ulong, IToken>>(reader)
+                    ?? throw new JsonReaderException($"Error reading token store at {Path}.");
             }
             catch (Exception) { }
             finally
             {
-                accessTokens.TryAdd(client.CurrentUser.Id, new Dictionary<string, string>()
+                accessTokens.TryAdd(client.CurrentUser.Id, this);
+                using var writer = new JsonTextWriter(File.CreateText(Path));
+                var serializer = new JsonSerializer()
                 {
-                    { nameof(AccessToken), AccessToken },
-                    { nameof(RefreshToken), RefreshToken },
-                    { nameof(Expiration), Expiration.ToString() }
-                });
-
-                using var writer = new JsonTextWriter(File.CreateText(AccessTokenPath));
-                var serializer = new JsonSerializer();
+                    Converters = { new InterfaceConverter<IToken, Token>() },
+                    Formatting = Formatting.Indented
+                };
                 serializer.Serialize(writer, accessTokens);
             }
         }
@@ -71,7 +82,7 @@ namespace Jeopardy.Discord.OAuth
             return Expiration < DateTime.Now;
         }
 
-        public async Task<DiscordRestClient> GetRestClient()
+        public async Task<DiscordRestClient> GetClient()
         {
             var client = new DiscordRestClient();
             await client.LoginAsync(TokenType.Bearer, AccessToken);

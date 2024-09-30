@@ -7,11 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jeopardy.Server", "Jeopardy
 EndProject
 Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "Jeopardy.Client", "Jeopardy.Client\Jeopardy.Client.esproj", "{7F8F8970-1178-4290-888E-490FB17C8ED6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jeopardy.Test", "Jeopardy.Test\Jeopardy.Test.csproj", "{70C0B1F3-8B04-46E6-9B61-45537F3DAE3D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jeopardy.Bots", "Jeopardy.Discord\Jeopardy.Bots.csproj", "{EEF09A1F-0305-48AD-AE76-73F625F86D2E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jeopardy.Discord", "Jeopardy.Discord\Jeopardy.Discord.csproj", "{EEF09A1F-0305-48AD-AE76-73F625F86D2E}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jeopardy.Util", "Jeopardy.Util\Jeopardy.Util.csproj", "{B78CF516-C8A0-4624-874C-EDFD21CB16A4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jeopardy.Util", "Jeopardy.Util\Jeopardy.Util.csproj", "{B78CF516-C8A0-4624-874C-EDFD21CB16A4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,10 +27,6 @@ Global
 		{7F8F8970-1178-4290-888E-490FB17C8ED6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7F8F8970-1178-4290-888E-490FB17C8ED6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7F8F8970-1178-4290-888E-490FB17C8ED6}.Release|Any CPU.Deploy.0 = Release|Any CPU
-		{70C0B1F3-8B04-46E6-9B61-45537F3DAE3D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{70C0B1F3-8B04-46E6-9B61-45537F3DAE3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{70C0B1F3-8B04-46E6-9B61-45537F3DAE3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{70C0B1F3-8B04-46E6-9B61-45537F3DAE3D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{EEF09A1F-0305-48AD-AE76-73F625F86D2E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{EEF09A1F-0305-48AD-AE76-73F625F86D2E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EEF09A1F-0305-48AD-AE76-73F625F86D2E}.Release|Any CPU.ActiveCfg = Release|Any CPU

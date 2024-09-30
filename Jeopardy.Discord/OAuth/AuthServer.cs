@@ -1,22 +1,26 @@
 ﻿using Microsoft.Extensions.Configuration;
-using System.Net;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http.Headers;
+using System.Net;
 using System.Text;
+using System.Threading.Tasks;
 
-namespace Jeopardy.Discord.OAuth
+namespace Jeopardy.Bots.OAuth
 {
-    public class WebServer : IDisposable
+    public class AuthServer
     {
-        private const string CLIENT_ID = "CLIENT_ID";
-        private const string CLIENT_SECRET = "CLIENT_SECRET";
+        private const string DISCORD_CLIENT_ID = "DISCORD_CLIENT_ID";
+        private const string DISCORD_CLIENT_SECRET = "DISCORD_CLIENT_SECRET";
         private const string USER_ACCESS_TOKEN_ENDPOINT = "https://discord.com/api/v10/oauth2/token";
         private const string REDIRECT_URI = "http://localhost:4000/api/oauth/discord/redirect";
-        private readonly IConfigurationRoot _config = new ConfigurationBuilder().AddUserSecrets<WebServer>().Build();
+        private readonly IConfigurationRoot _config = new ConfigurationBuilder().AddUserSecrets<AuthServer>().Build();
 
         private HttpClient Client { get; }
         private HttpListener Listener { get; }
 
-        public WebServer()
+        public AuthServer()
         {
             Client = new();
             Listener = new();
@@ -63,12 +67,11 @@ namespace Jeopardy.Discord.OAuth
 
         private async Task<HttpResponseMessage> AuthenticateUser(HttpListenerRequest request)
         {
-            string clientID = _config[CLIENT_ID]
-                ?? throw new InvalidOperationException($"{CLIENT_ID} was not found in user secrets.");
-            string clientSecret = _config[CLIENT_SECRET]
-                ?? throw new InvalidOperationException($"{CLIENT_SECRET} was not found in user secrets.");
-            string code = request.QueryString["code"]
-                ?? string.Empty;
+            string clientID = _config[DISCORD_CLIENT_ID]
+                ?? throw new InvalidOperationException($"{DISCORD_CLIENT_ID} was not found in user secrets.");
+            string clientSecret = _config[DISCORD_CLIENT_SECRET]
+                ?? throw new InvalidOperationException($"{DISCORD_CLIENT_SECRET} was not found in user secrets.");
+            string code = request.QueryString["code"] ?? string.Empty;
             byte[] authBytes = new UTF8Encoding().GetBytes($"{clientID}:{clientSecret}");
             Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(authBytes));
 
@@ -81,13 +84,6 @@ namespace Jeopardy.Discord.OAuth
             });
 
             return await Client.PostAsync(USER_ACCESS_TOKEN_ENDPOINT, content);
-        }
-
-        public void Dispose()
-        {
-            Client.Dispose();
-            Listener.Stop();
-            Listener.Close();
         }
     }
 }

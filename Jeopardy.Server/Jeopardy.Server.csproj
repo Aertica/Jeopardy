@@ -7,6 +7,7 @@
     <SpaRoot>..\Jeopardy.Client</SpaRoot>
     <SpaProxyLaunchCommand>npm run dev</SpaProxyLaunchCommand>
     <SpaProxyServerUrl>https://localhost:5173</SpaProxyServerUrl>
+    <UserSecretsId>7a0180d9-0ae3-4f65-9992-b27c681ecc05</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,14 +15,16 @@
       <Version>8.*-*</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.5" />
+    <PackageReference Include="SpotifyAPI.Web" Version="7.1.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+    <PackageReference Include="Unosquare.Swan.Lite" Version="3.1.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Jeopardy.Client\Jeopardy.Client.esproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\Jeopardy.Discord\Jeopardy.Discord.csproj" />
+    <ProjectReference Include="..\Jeopardy.Discord\Jeopardy.Bots.csproj" />
     <ProjectReference Include="..\Jeopardy.Util\Jeopardy.Util.csproj" />
   </ItemGroup>
 
