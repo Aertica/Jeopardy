@@ -24,7 +24,7 @@
     <ProjectReference Include="..\Jeopardy.Client\Jeopardy.Client.esproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\Jeopardy.Discord\Jeopardy.Bots.csproj" />
+    <ProjectReference Include="..\Jeopardy.Bots\Jeopardy.Bots.csproj" />
     <ProjectReference Include="..\Jeopardy.Util\Jeopardy.Util.csproj" />
   </ItemGroup>
 
