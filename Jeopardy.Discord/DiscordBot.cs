@@ -103,6 +103,12 @@ namespace Jeopardy.Bots
             return connections;
         }
 
+        public async Task<string> GetUsername(ulong userID)
+        {
+            using var client = await new Token(userID).GetClient();
+            return client.CurrentUser.Username;
+        }
+
         public static class Connecttions
         {
             public const string Spotify = "spotify";
@@ -111,6 +117,7 @@ namespace Jeopardy.Bots
 
         public async Task<(string, IEnumerable<ICard>)> Fetch(ulong guildID, int count = 5)
         {
+            guildID = 700465481122840626u;
             await Ready.Task;
 
             var quotes = new List<IMessage>();
