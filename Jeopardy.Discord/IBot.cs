@@ -37,10 +37,25 @@ namespace Jeopardy.Bots
             spotifyBot.StartClient();
             spotifyBot.GetConnections += async (ulong guildID) =>
             {
-                await spotifyBot.Ready.Task;
                 return await discordBot.GetConnections(guildID, DiscordBot.Connecttions.Spotify);
             };
+            spotifyBot.GetUsername += async (ulong userID) =>
+            {
+                return await discordBot.GetUsername(userID);
+            };
             bots.Add(spotifyBot);
+
+            SteamBot steamBot = new();
+            steamBot.StartClient();
+            steamBot.GetConnections += async (ulong guildID) =>
+            {
+                return await discordBot.GetConnections(guildID, DiscordBot.Connecttions.Steam);
+            };
+            steamBot.GetUsername += async (ulong userID) =>
+            {
+                return await discordBot.GetUsername(userID);
+            };
+            bots.Add(steamBot);
 
             return bots;
         }

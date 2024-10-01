@@ -22,6 +22,9 @@ namespace Jeopardy.Bots
         public delegate Task<Dictionary<ulong, string>> GetConnectionsEventHandler(ulong guildID);
         public event GetConnectionsEventHandler GetConnections;
 
+        public delegate Task<string> GetUsernameEventHandler(ulong userID);
+        public event GetUsernameEventHandler GetUsername;
+
         public SpotifyBot()
         {
             Ready = new();
@@ -37,10 +40,11 @@ namespace Jeopardy.Bots
             await Ready.Task;
             var client = await GetClient();
 
-            var songs = new Dictionary<string, ulong[]>();
-            var songsWithRepeats = new List<KeyValuePair<string, ulong>>();
+            var songs = new Dictionary<string, string[]>();
+            var songsWithRepeats = new List<KeyValuePair<string, string>>();
             foreach (var (id, conn) in await GetConnections(guildID))
             {
+                var username = await GetUsername(id);
                 var playlists = await client.Playlists.GetUsers(conn);
                 foreach (var playlist in await client.PaginateAll(playlists))
                 {
@@ -49,7 +53,7 @@ namespace Jeopardy.Bots
                     {
                         if (track.Track.ReadProperty("ExternalUrls") is Dictionary<string, string> url)
                         {
-                            var keyValuePair = new KeyValuePair<string, ulong>(url.GetValueOrDefault("spotify"), id);
+                            var keyValuePair = new KeyValuePair<string, string>(url.GetValueOrDefault("spotify"), username);
                             if (keyValuePair.Key != null) songsWithRepeats.Add(keyValuePair);
                         }
                     }
@@ -59,8 +63,8 @@ namespace Jeopardy.Bots
             foreach (var keyValuePair in songsWithRepeats)
             {
                 if (songs.ContainsKey(keyValuePair.Key) && !songs[keyValuePair.Key].Contains(keyValuePair.Value))
-                    songs[keyValuePair.Key] = songs[keyValuePair.Key].Concat(new ulong[] { keyValuePair.Value }).ToArray();
-                else songs[keyValuePair.Key] = new ulong[] { keyValuePair.Value };
+                    songs[keyValuePair.Key] = songs[keyValuePair.Key].Concat(new string[] { keyValuePair.Value }).ToArray();
+                else songs[keyValuePair.Key] = new string[] { keyValuePair.Value };
             }
 
             return ("Music", songs.Select(song => new Song(song.Key, song.Value))
@@ -86,13 +90,13 @@ namespace Jeopardy.Bots
     public class Song : ICard
     {
         public string Question => $"<iframe style=\"border-radius:12px\" src=\"https://open.spotify.com/embed/track/{ID}?utm_source=generator\" width=\"100%\" height=\"152\" frameBorder=\"0\" allowfullscreen=\"\" allow=\"autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture\" loading=\"lazy\" </iframe>"; //"https://open.spotify.com/embed/track/7mfMTQ21RSVhUw778ymlyV?utm_source=generator"
-        public string Answer => Users.Length.ToString();
+        public string Answer => Users.Humanize();
 
         private string URL { get; set; }
         private string ID { get; set; }
-        private ulong[] Users { get; set; }
+        private string[] Users { get; set; }
 
-        public Song(string url, ulong[] users)
+        public Song(string url, string[] users)
         {
             URL = url;
             ID = new Uri(url).Segments.LastOrDefault();
