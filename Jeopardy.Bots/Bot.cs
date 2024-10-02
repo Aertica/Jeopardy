@@ -4,28 +4,31 @@ using Newtonsoft.Json;
 
 namespace Jeopardy.Bots
 {
-    public interface IBot
+    public abstract class Bot
     {
-        public abstract TaskCompletionSource<bool> Ready { get; }
-        public abstract void StartClient();
-        public abstract Task<(string, IEnumerable<ICard>)> Fetch(ulong guildID, int count = 5);
+        private static readonly string _path = $"{Environment.CurrentDirectory}\\ActiveGames.json";
 
-        public static sealed IEnumerable<IBot> InitializeBots()
+        public abstract string Category { get; }
+        public abstract TaskCompletionSource Ready { get; protected set; }
+        public abstract void StartClient();
+        public abstract Task StopClient();
+        public abstract Task<IEnumerable<ICard>> FetchQuestions(ulong guildID, int count = 5);
+
+        public static IEnumerable<Bot> InitializeBots()
         {
-            List<IBot> bots = [];
+            List<Bot> bots = [];
 
             DiscordBot discordBot = new();
             discordBot.StartClient();
             discordBot.OnPlay += async (ulong guildID) =>
             {
-                await discordBot.Ready.Task;
-
                 Guid id = Guid.NewGuid();
                 var gameboard = new Dictionary<string, IEnumerable<ICard>>();
                 foreach (var bot in bots.Shuffle().Take(6))
                 {
-                    var (name, questions) = await bot.Fetch(guildID);
-                    gameboard.Add(name, questions);
+                    var category = bot.Category;
+                    var questions = await bot.FetchQuestions(guildID);
+                    gameboard.Add(category, questions);
                 }
 
                 SaveGameBoard(id, gameboard);
@@ -57,12 +60,14 @@ namespace Jeopardy.Bots
             };
             bots.Add(steamBot);
 
+            TriviaBot triviaBot = new();
+            triviaBot.StartClient();
+            bots.Add(triviaBot);
+
             return bots;
         }
 
-        private static readonly string _path = $"{Environment.CurrentDirectory}\\ActiveGames.json";
-
-        private static sealed void SaveGameBoard(Guid id, Dictionary<string, IEnumerable<ICard>> gameboard)
+        private static void SaveGameBoard(Guid id, Dictionary<string, IEnumerable<ICard>> gameboard)
         {
             var activeGames = new Dictionary<Guid, Dictionary<string, IEnumerable<ICard>>>();
             try

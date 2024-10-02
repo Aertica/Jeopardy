@@ -13,24 +13,26 @@ namespace Jeopardy.Bots.OAuth
     {
         private const string DISCORD_CLIENT_ID = "DISCORD_CLIENT_ID";
         private const string DISCORD_CLIENT_SECRET = "DISCORD_CLIENT_SECRET";
-        private const string USER_ACCESS_TOKEN_ENDPOINT = "https://discord.com/api/v10/oauth2/token";
-        private const string REDIRECT_URI = "http://localhost:4000/api/oauth/discord/redirect";
+        private const string USER_ACCESS_TOKEN_ENDPOINT = "https://discord.com/api/oauth2/token";
         private readonly IConfigurationRoot _config = new ConfigurationBuilder().AddUserSecrets<AuthServer>().Build();
 
         private HttpClient Client { get; }
         private HttpListener Listener { get; }
+        private IEnumerable<string> RedirectURIs { get; }
 
-        public AuthServer()
+        public AuthServer(IEnumerable<string> uris)
         {
             Client = new();
             Listener = new();
+            RedirectURIs = uris;
         }
 
         public void Start()
         {
             Task.Run(async () =>
             {
-                Listener.Prefixes.Add(REDIRECT_URI + "/");
+                foreach (var uri in RedirectURIs)
+                    Listener.Prefixes.Add(uri + "/");
                 Listener.Start();
                 // wait for a user to authenticate
                 while (true)
@@ -79,7 +81,7 @@ namespace Jeopardy.Bots.OAuth
             {
                 { "grant_type", "authorization_code" },
                 { "code", code },
-                { "redirect_uri", REDIRECT_URI },
+                { "redirect_uri", RedirectURIs.ElementAt(0) },
                 { "scope", "identify connections" },
             });
 
