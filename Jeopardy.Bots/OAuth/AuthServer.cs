@@ -81,7 +81,7 @@ namespace Jeopardy.Bots.OAuth
             {
                 { "grant_type", "authorization_code" },
                 { "code", code },
-                { "redirect_uri", RedirectURIs.ElementAt(0) },
+                { "redirect_uri", RedirectURIs.First() },
                 { "scope", "identify connections" },
             });
 

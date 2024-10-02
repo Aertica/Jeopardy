@@ -11,6 +11,8 @@ using System.Text.RegularExpressions;
 using EmbedIO;
 using Jeopardy.Util;
 using Jeopardy.Bots.OAuth;
+using Jeopardy.Bots.Exceptions;
+using System.Reflection.Metadata.Ecma335;
 
 namespace Jeopardy.Bots
 {
@@ -27,7 +29,11 @@ namespace Jeopardy.Bots
         public DiscordBot()
         {
             Ready = new();
-            Client = new(new() { GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildMembers });
+            Client = new(new DiscordSocketConfig()
+            {
+                GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildMembers,
+                MessageCacheSize = 32
+            });
         }
 
         public override void StartClient()
@@ -69,6 +75,39 @@ namespace Jeopardy.Bots
                     Client.SlashCommandExecuted += SlashCommandHandler;
                     Ready.SetResult();
 
+                    Client.MessageReceived += async (message) =>
+                    {
+                        if (message.Channel.Id == 1142257646569787413u)
+                        {
+                            var y = Emoji.Parse(":white_check_mark:");
+                            var n = Emoji.Parse(":x:");
+                            var quote = new Quote(message.CleanContent);
+                            if (quote.IsValid)
+                                await message.AddReactionAsync(y);
+                            else
+                                await message.AddReactionAsync(n);
+                        }
+                    };
+
+                    Client.MessageUpdated += async (chachable, message, channel) =>
+                    {
+                        // For some reason the supplied message's content is empty.
+                        var m = await ((SocketTextChannel)Client.GetChannel(channel.Id)).GetMessageAsync(message.Id);
+
+                        if (m.Channel.Id == 1142257646569787413u)
+                        {
+                            var y = Emoji.Parse(":white_check_mark:");
+                            var n = Emoji.Parse(":x:");
+                            await m.RemoveReactionAsync(y, Client.CurrentUser);
+                            await m.RemoveReactionAsync(n, Client.CurrentUser);
+                            var quote = new Quote(m.CleanContent);
+                            if (quote.IsValid)
+                                await m.AddReactionAsync(y);
+                            else
+                                await m.AddReactionAsync(n);
+                        }
+                    };
+
                     var info = await Client.GetApplicationInfoAsync();
                     var server = new AuthServer(info.RedirectUris);
                     server.Start();
@@ -84,7 +123,7 @@ namespace Jeopardy.Bots
                 }
             });
         }
-
+        
         public override async Task StopClient()
         {
             await Client.LogoutAsync();
@@ -119,7 +158,9 @@ namespace Jeopardy.Bots
 
         public async Task<string> GetUsername(ulong userID)
         {
-            using var client = await new Token(userID).GetClient();
+            using var client = await new Token(userID).GetClient()
+                ?? throw new UnauthorizedException(userID, $"User {userID} was not authorized.");
+
             return client.CurrentUser.Username;
         }
 
@@ -144,7 +185,8 @@ namespace Jeopardy.Bots
 
         private static async Task<Dictionary<string, string>> GetUserConnections(ulong userID)
         {
-            using var client = await new Token(userID).GetClient();
+            using var client = await new Token(userID).GetClient()
+                ?? throw new UnauthorizedException(userID, $"User {userID} was not authorized.");
 
             var connections = new Dictionary<string, string>();
             foreach (IConnection connection in await client.GetConnectionsAsync())
