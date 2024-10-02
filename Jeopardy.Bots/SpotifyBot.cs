@@ -11,40 +11,57 @@ using Swan.Parsers;
 
 namespace Jeopardy.Bots
 {
-    public class SpotifyBot : IBot
+    public class SpotifyBot : Bot
     {
         private const string SPOTIFY_CLIENT_ID = "SPOTIFY_CLIENT_ID";
         private const string SPOTIFY_CLIENT_SECRET = "SPOTIFY_CLIENT_SECRET";
         private static readonly IConfigurationRoot _config = new ConfigurationBuilder().AddUserSecrets<SpotifyBot>().Build();
 
-        public TaskCompletionSource<bool> Ready { get; }
-
         public delegate Task<Dictionary<ulong, string>> GetConnectionsEventHandler(ulong guildID);
-        public event GetConnectionsEventHandler GetConnections;
+        public event GetConnectionsEventHandler? GetConnections;
 
         public delegate Task<string> GetUsernameEventHandler(ulong userID);
-        public event GetUsernameEventHandler GetUsername;
+        public event GetUsernameEventHandler? GetUsername;
+
+        public override string Category => "Spotify";
+        public override TaskCompletionSource Ready { get; protected set; }
 
         public SpotifyBot()
         {
             Ready = new();
         }
 
-        public void StartClient()
+        public override void StartClient()
         {
-            Ready.SetResult(true);
+            Task.Run(() =>
+            {
+                try
+                {
+                    Ready.SetResult();
+                }
+                catch (Exception ex)
+                {
+                    Ready.SetException(ex);
+                }
+            });
         }
 
-        public async Task<(string, IEnumerable<ICard>)> Fetch(ulong guildID, int count = 5)
+        public override Task StopClient()
+        {
+            Ready = new();
+            return Task.CompletedTask;
+        }
+
+        public override async Task<IEnumerable<ICard>> FetchQuestions(ulong guildID, int count = 5)
         {
             await Ready.Task;
             var client = await GetClient();
 
             var songs = new Dictionary<string, string[]>();
             var songsWithRepeats = new List<KeyValuePair<string, string>>();
-            foreach (var (id, conn) in await GetConnections(guildID))
+            foreach (var (id, conn) in await GetConnections.Invoke(guildID))
             {
-                var username = await GetUsername(id);
+                var username = await GetUsername.Invoke(id);
                 var playlists = await client.Playlists.GetUsers(conn);
                 foreach (var playlist in await client.PaginateAll(playlists))
                 {
@@ -67,9 +84,9 @@ namespace Jeopardy.Bots
                 else songs[keyValuePair.Key] = new string[] { keyValuePair.Value };
             }
 
-            return ("Music", songs.Select(song => new Song(song.Key, song.Value))
-                                    .Shuffle()
-                                    .Take(count));
+            return songs.Select(song => new Song(song.Key, song.Value))
+                        .Shuffle()
+                        .Take(count);
             
         }
 

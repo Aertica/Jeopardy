@@ -8,7 +8,7 @@ namespace Jeopardy.Bots
         private const string SERVER_AUTH_URI = "https://discord.com/oauth2/authorize?client_id=1108572849284853781&permissions=328565255168&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fapi%2Foauth%2Fdiscord%2Fredirect&integration_type=0&scope=identify+bot+connections";
 
         public delegate Task<Guid> OnPlayEventHandler(ulong guildID);
-        public event OnPlayEventHandler OnPlay;
+        public event OnPlayEventHandler? OnPlay;
 
         public async Task SlashCommandHandler(SocketSlashCommand command)
         {
@@ -42,9 +42,9 @@ namespace Jeopardy.Bots
 
         private async Task<string> play(SocketSlashCommand command)
         {
-            if (command.GuildId is ulong guildID)
+            if (OnPlay is not null && command.GuildId is ulong guildID)
             {
-                var id = await OnPlay(guildID);
+                var id = await OnPlay.Invoke(guildID);
                 return $"https://localhost:5173/{id}";
             }
                 

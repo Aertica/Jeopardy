@@ -15,7 +15,7 @@ namespace Jeopardy.Server
 
         public static void Main(string[] args)
         {
-            var bots = IBot.InitializeBots();
+            var bots = Bot.InitializeBots();
 
             var builder = WebApplication.CreateBuilder(args);
             builder.Services.AddControllers();

@@ -11,24 +11,47 @@ using System.Threading.Tasks;
 
 namespace Jeopardy.Bots
 {
-    public class SteamBot : IBot
+    public class SteamBot : Bot
     {
         private const string STEAM_KEY = "STEAM_KEY";
         private readonly IConfigurationRoot _config = new ConfigurationBuilder().AddUserSecrets<DiscordBot>().Build();
-        public TaskCompletionSource<bool> Ready { get; }
 
         public delegate Task<Dictionary<ulong, string>> GetConnectionsEventHandler(ulong guildID);
-        public event GetConnectionsEventHandler GetConnections;
+        public event GetConnectionsEventHandler? GetConnections;
 
         public delegate Task<string> GetUsernameEventHandler(ulong userID);
-        public event GetUsernameEventHandler GetUsername;
+        public event GetUsernameEventHandler? GetUsername;
+
+        public override string Category => "Steam";
+        public override TaskCompletionSource Ready { get; protected set; }
 
         public SteamBot()
         {
             Ready = new();
         }
 
-        public async Task<(string, IEnumerable<ICard>)> Fetch(ulong guildID, int count = 5)
+        public override void StartClient()
+        {
+            Task.Run(() =>
+            {
+                try
+                {
+                    Ready.SetResult();
+                }
+                catch (Exception ex)
+                {
+                    Ready.SetException(ex);
+                }
+            });
+        }
+
+        public override Task StopClient()
+        {
+            Ready = new();
+            return Task.CompletedTask;
+        }
+
+        public override async Task<IEnumerable<ICard>> FetchQuestions(ulong guildID, int count = 5)
         {
             var steamKey = _config[STEAM_KEY]
                 ?? throw new InvalidOperationException($"{STEAM_KEY} was not found in user secrets.");
@@ -37,9 +60,9 @@ namespace Jeopardy.Bots
 
             var games = new List<Game>();
             var gamesWithRepeats = new List<Game>();
-            foreach (var (id, conn) in await GetConnections(guildID))
+            foreach (var (id, conn) in await GetConnections.Invoke(guildID))
             {
-                var username = await GetUsername(id);
+                var username = await GetUsername.Invoke(id);
                 var userGames = (await playerInterface.GetOwnedGamesAsync(ulong.Parse(conn), true, true)).Data.OwnedGames;
                 foreach (var userGame in userGames)
                 {
@@ -55,13 +78,8 @@ namespace Jeopardy.Bots
                 else games.Add(game);
             }
 
-            return ("Steam", games.Shuffle()
-                                  .Take(count));
-        }
-
-        public void StartClient()
-        {
-            Ready.SetResult(true); ;
+            return games.Shuffle()
+                        .Take(count);
         }
     }
 

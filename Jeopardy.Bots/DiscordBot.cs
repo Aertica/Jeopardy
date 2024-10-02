@@ -14,80 +14,113 @@ using Jeopardy.Bots.OAuth;
 
 namespace Jeopardy.Bots
 {
-    public partial class DiscordBot : IBot
+    public partial class DiscordBot : Bot
     {
         private const string TOKEN = "TOKEN";
         private const string QUOTES_CHANNEL = "quotes";
         private readonly IConfigurationRoot _config = new ConfigurationBuilder().AddUserSecrets<DiscordBot>().Build();
 
-        public DiscordSocketClient Client { get; }
-        public TaskCompletionSource<bool> Ready { get; }
+        public override string Category => "Quotes";
+        public override TaskCompletionSource Ready { get; protected set; }
+        private DiscordSocketClient Client { get; }
 
         public DiscordBot()
         {
-            Client = new(new() { GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildMembers });
             Ready = new();
+            Client = new(new() { GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildMembers });
         }
 
-        public void StartClient()
+        public override void StartClient()
         {
-            string token = _config[TOKEN]
-                ?? throw new InvalidOperationException($"{TOKEN} was not found in user secrets.");
-
             Task.Run(async () =>
             {
-                var server = new WebServer();
-                server.Start();
-
-                var clientReady = new TaskCompletionSource<bool>();
-                await Client.LoginAsync(Discord.TokenType.Bot, token);
-                await Client.StartAsync();
-                Client.Ready += () =>
+                try
                 {
-                    clientReady.SetResult(true);
-                    return Task.CompletedTask;
-                };
-                await clientReady.Task;
+                    string token = _config[TOKEN]
+                        ?? throw new InvalidOperationException($"{TOKEN} was not found in user secrets.");
+                    var clientReady = new TaskCompletionSource();
+                    await Client.LoginAsync(Discord.TokenType.Bot, token);
+                    await Client.StartAsync();
+                    Client.Ready += () =>
+                    {
+                        clientReady.SetResult();
+                        return Task.CompletedTask;
+                    };
+                    await clientReady.Task;
 
-                var commands = new List<ApplicationCommandProperties>();
+                    var commands = new ApplicationCommandProperties[3];
 
-                var authCommand = new SlashCommandBuilder();
-                authCommand.WithName(nameof(authorize));
-                authCommand.WithDescription("Authorize Jeopardy Bot to use your Discord information.");
-                commands.Add(authCommand.Build());
+                    var authCommand = new SlashCommandBuilder();
+                    authCommand.WithName(nameof(authorize));
+                    authCommand.WithDescription("Authorize Jeopardy Bot to use your Discord information.");
+                    commands[0] = authCommand.Build();
 
-                var inviteCommand = new SlashCommandBuilder();
-                inviteCommand.WithName(nameof(invite));
-                inviteCommand.WithDescription("Invite Jeopardy Bot to another server.");
-                commands.Add(inviteCommand.Build());
+                    var inviteCommand = new SlashCommandBuilder();
+                    inviteCommand.WithName(nameof(invite));
+                    inviteCommand.WithDescription("Invite Jeopardy Bot to another server.");
+                    commands[1] = inviteCommand.Build();
 
-                var playCommand = new SlashCommandBuilder();
-                playCommand.WithName(nameof(play));
-                playCommand.WithDescription("Start a game of Jeopardy using this server.");
-                commands.Add(playCommand.Build());
+                    var playCommand = new SlashCommandBuilder();
+                    playCommand.WithName(nameof(play));
+                    playCommand.WithDescription("Start a game of Jeopardy using this server.");
+                    commands[2] = playCommand.Build();
 
-                await Client.BulkOverwriteGlobalApplicationCommandsAsync(commands.ToArray());
-                Client.SlashCommandExecuted += SlashCommandHandler;
-                Ready.SetResult(true);
+                    await Client.BulkOverwriteGlobalApplicationCommandsAsync(commands);
+                    Client.SlashCommandExecuted += SlashCommandHandler;
+                    Ready.SetResult();
 
-                await Task.Delay(-1);
+                    var info = await Client.GetApplicationInfoAsync();
+                    var server = new AuthServer(info.RedirectUris);
+                    server.Start();
+
+                    await Task.Delay(-1);
+                }
+                catch (Exception ex)
+                {
+                    if (Client.LoginState == LoginState.LoggedIn)
+                        await Client.LogoutAsync();
+
+                    Ready.SetException(ex);
+                }
             });
         }
 
-        public SocketTextChannel? GetQuotesChannel(ulong guildID)
+        public override async Task StopClient()
         {
-            return Client.GetGuild(guildID)?.Channels.Where(channel => channel.Name == QUOTES_CHANNEL).SingleOrDefault() as SocketTextChannel;
+            await Client.LogoutAsync();
+            Ready = new();
         }
 
-        public static async Task<Dictionary<string, string>> GetUserConnections(ulong userID)
+        public override async Task<IEnumerable<ICard>> FetchQuestions(ulong guildID, int count = 5)
+        {
+            await Ready.Task;
+            if (Ready.Task.Exception is not null)
+                throw Ready.Task.Exception;
+
+            var quotes = new List<IMessage>();
+            var quotesChannel = await GetQuotesChannel(guildID);
+            if (quotesChannel != null)
+            {
+                quotes.AddRange(await quotesChannel.GetMessagesAsync().FlattenAsync());
+
+                var newQuotes = await quotesChannel.GetMessagesAsync(quotes.Last(), Direction.Before).FlattenAsync();
+                while (newQuotes.Any())
+                {
+                    quotes.AddRange(newQuotes);
+                    newQuotes = await quotesChannel.GetMessagesAsync(quotes.Last(), Direction.Before).FlattenAsync();
+                }
+            }
+
+            return quotes.Select(quote => new Quote(quote.CleanContent))
+                         .Where(quote => quote.IsValid)
+                         .Shuffle()
+                         .Take(count);
+        }
+
+        public async Task<string> GetUsername(ulong userID)
         {
             using var client = await new Token(userID).GetClient();
-
-            var connections = new Dictionary<string, string>();
-            foreach (IConnection connection in await client.GetConnectionsAsync())
-                connections.Add(connection.Type, connection.Id);
-
-            return connections;
+            return client.CurrentUser.Username;
         }
 
         public async Task<Dictionary<ulong, string>> GetConnections(ulong guildID, string connection)
@@ -103,41 +136,27 @@ namespace Jeopardy.Bots
             return connections;
         }
 
-        public async Task<string> GetUsername(ulong userID)
+        private async Task<SocketTextChannel?> GetQuotesChannel(ulong guildID)
+        {
+            await Ready.Task;
+            return Client.GetGuild(guildID)?.Channels.Where(channel => channel.Name == QUOTES_CHANNEL).SingleOrDefault() as SocketTextChannel;
+        }
+
+        private static async Task<Dictionary<string, string>> GetUserConnections(ulong userID)
         {
             using var client = await new Token(userID).GetClient();
-            return client.CurrentUser.Username;
+
+            var connections = new Dictionary<string, string>();
+            foreach (IConnection connection in await client.GetConnectionsAsync())
+                connections.Add(connection.Type, connection.Id);
+
+            return connections;
         }
 
         public static class Connecttions
         {
             public const string Spotify = "spotify";
             public const string Steam = "steam";
-        }
-
-        public async Task<(string, IEnumerable<ICard>)> Fetch(ulong guildID, int count = 5)
-        {
-            guildID = 700465481122840626u;
-            await Ready.Task;
-
-            var quotes = new List<IMessage>();
-            var quotesChannel = GetQuotesChannel(guildID);
-            if (quotesChannel != null)
-            {
-                quotes.AddRange(await quotesChannel.GetMessagesAsync().FlattenAsync());
-
-                var newQuotes = await quotesChannel.GetMessagesAsync(quotes.Last(), Direction.Before).FlattenAsync();
-                while (newQuotes.Any())
-                {
-                    quotes.AddRange(newQuotes);
-                    newQuotes = await quotesChannel.GetMessagesAsync(quotes.Last(), Direction.Before).FlattenAsync();
-                }
-            }
-
-            return ("Quotes", quotes.Select(quote => new Quote(quote.CleanContent))
-                                    .Where(quote => quote.IsValid)
-                                    .Shuffle()
-                                    .Take(count));
         }
     }
 
