@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
@@ -15,6 +16,7 @@ namespace Jeopardy.Bots
     {
         private const string QUESTION_URI = "https://the-trivia-api.com/v2/questions";
 
+        private string[] Categories => ["music", "sport_and_leisure", "film_and_tv", "arts_and_literature", "history", "society_and_culture", "science", "geography", "food_and_drink", "general_knowledge"];
         public override string Category => "Trivia";
         public override TaskCompletionSource Ready { get; protected set; }
 
@@ -47,7 +49,8 @@ namespace Jeopardy.Bots
         public override async Task<IEnumerable<ICard>> FetchQuestions(ulong guildID, int count = 5)
         {
             using var client = new HttpClient();
-            var response = await client.GetAsync($"{QUESTION_URI}?limit={count}");
+            var category = RandomNumberGenerator.GetItems<string>(Categories, 1)[0];
+            var response = await client.GetAsync($"{QUESTION_URI}?limit={count}&category={category}");
             string json = await response.Content.ReadAsStringAsync();
             var questions = JsonConvert.DeserializeObject<IEnumerable<TriviaQuestion>>(json)
                 ?? throw new JsonReaderException($"Error reading data from {QUESTION_URI}."); ;

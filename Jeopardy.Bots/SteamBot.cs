@@ -71,7 +71,7 @@ namespace Jeopardy.Bots
                 }
             }
 
-            foreach (var game in gamesWithRepeats)
+            foreach (var game in gamesWithRepeats.Where(game => game.UserPlayTimes.Single().TotalMinutes > 1))
             {
                 if (!games.All(g => g.Id != game.Id) && !games.Find(g => g.Id == game.Id).Equals(game))
                     games.Find(g => g.Id == game.Id).Add(game);
@@ -83,34 +83,59 @@ namespace Jeopardy.Bots
         }
     }
 
-        public partial class Game : ICard
+    public partial class Game : ICard
+    {
+        public string Question
         {
-            public string Question => Name;
-            public string Answer => UserPlayTimes.Humanize();
-
-            public Game(ulong id, string name, string username, TimeSpan playTime)
+            get
             {
-                Id = id;
-                Name = name;
-                Users = [username];
-                UserPlayTimes = [playTime];
-            }
+                var seed = UserPlayTimes.GetHashCode();
+                var random = new Random(seed);
+                var index = random.NextInt64(Users.Length + 100);
+                var q1 = $"How many hours of playtime does {Users[0]} have in {Name}?";
+                var q2 = $"Who has the most hours of playtime in {Name}.";
 
-            public ulong Id { get; }
-            public string Name { get; }
-            public string[] Users { get; set; }
-            public TimeSpan[] UserPlayTimes { get; set; }
-
-            public void Add(Game game)
-            {
-                Users = Users.Concat(game.Users).ToArray();
-                UserPlayTimes = UserPlayTimes.Concat(game.UserPlayTimes).ToArray();
-            }
-
-            public bool Equals(Game game)
-            {
-                return new HashSet<string>(Users).SetEquals(game.Users);
+                return random.GetItems([q1, q2], 1)[0];
             }
         }
+
+        public string Answer
+        {
+            get
+            {
+                var seed = UserPlayTimes.GetHashCode();
+                var random = new Random(seed);
+                var index = random.NextInt64(Users.Length + 100);
+                var a1 = UserPlayTimes[0].ToString();
+                var a2 = Users[0].ToString();
+
+                return random.GetItems([a1, a2], 1)[0];
+            }
+        }
+
+        public Game(ulong id, string name, string username, TimeSpan playTime)
+        {
+            Id = id;
+            Name = name;
+            Users = [username];
+            UserPlayTimes = [playTime];
+        }
+
+        public ulong Id { get; }
+        public string Name { get; }
+        public string[] Users { get; set; }
+        public TimeSpan[] UserPlayTimes { get; set; }
+
+        public void Add(Game game)
+        {
+            Users = Users.Concat(game.Users).ToArray();
+            UserPlayTimes = UserPlayTimes.Concat(game.UserPlayTimes).ToArray();
+        }
+
+        public bool Equals(Game game)
+        {
+            return new HashSet<string>(Users).SetEquals(game.Users);
+        }
+    }
     
 }
