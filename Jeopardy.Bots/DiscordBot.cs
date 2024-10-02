@@ -18,7 +18,7 @@ namespace Jeopardy.Bots
 {
     public partial class DiscordBot : Bot
     {
-        private const string TOKEN = "TOKEN";
+        private const string DISCORD_TOKEN = "DISCORD_TOKEN";
         private const string QUOTES_CHANNEL = "quotes";
         private readonly IConfigurationRoot _config = new ConfigurationBuilder().AddUserSecrets<DiscordBot>().Build();
 
@@ -42,8 +42,8 @@ namespace Jeopardy.Bots
             {
                 try
                 {
-                    string token = _config[TOKEN]
-                        ?? throw new InvalidOperationException($"{TOKEN} was not found in user secrets.");
+                    string token = _config[DISCORD_TOKEN]
+                        ?? throw new InvalidOperationException($"{DISCORD_TOKEN} was not found in user secrets.");
                     var clientReady = new TaskCompletionSource();
                     await Client.LoginAsync(Discord.TokenType.Bot, token);
                     await Client.StartAsync();
